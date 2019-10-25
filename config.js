@@ -22,7 +22,7 @@ To get private config values, add a .env file with sample values (First two are 
 AZURE_APP_CONFIG_URL="https://your-app-config.azconfig.io"
 AZURE_APP_CONFIG_CONNECTION_STRING="generated-app-config-conneciton-string"
 PORT=3000
-SUBSCRIPTION_KEY=91add66ed08944f9869cb610d0335082
+SUBSCRIPTION_KEY="dummy"
 SERVICE_REGION=westus2
 SPEECH_RECOGNITION_LANGUAGE=en-US
 */
