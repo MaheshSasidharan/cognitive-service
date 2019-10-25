@@ -30,8 +30,8 @@ io.on("connection", function (wsClient) {
   });
 
   /*
-  client.on("startGoogleCloudStream", function (data) {
-    console.log("startGoogleCloudStream", data);
+  client.on("startMicrosoftCognitiveService", function (data) {
+    console.log("startMicrosoftCognitiveService", data);
 
     pushStream = sdk.AudioInputStream.createPushStream();
     const audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
@@ -56,8 +56,8 @@ io.on("connection", function (wsClient) {
       });
   });
 
-  client.on("endGoogleCloudStream", function (data) {
-    console.log("endGoogleCloudStream", data);
+  client.on("endMicrosoftCognitiveService", function (data) {
+    console.log("endMicrosoftCognitiveService", data);
     pushStream.close();
   });
 

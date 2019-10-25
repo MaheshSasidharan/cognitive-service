@@ -11,8 +11,11 @@ const sdk = require("microsoft-cognitiveservices-speech-sdk");
 
     const processedSpeech = function (result) {
       wsClient.emit("processedSpeech", result);
-    }
+    };
 
+    const endOfSpeechRecognition = function (result) {
+      wsClient.emit("endOfSpeechRecognition", result);
+    };
     // now create the audio-config pointing to our stream and
     // the speech config specifying the language.
     const audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
@@ -99,8 +102,9 @@ const sdk = require("microsoft-cognitiveservices-speech-sdk");
     // start the recognizer and wait for a result.
     recognizer.recognizeOnceAsync(
       function (result) {
-        processedSpeech(result);
+        endOfSpeechRecognition(result);
         closeRecognizer();
+        
       },
       function (err) {
         closeRecognizer();

@@ -5,4 +5,8 @@ const config = {
     speechRecognitionLanguage: "en-US"
 };
 
+// luSubscriptionKey: "YourLanguageUnderstandingSubscriptionKey",
+// luServiceRegion: "YourLanguageUnderstandingServiceRegion",
+// luAppId: "YourLanguageUnderstandingAppId",
+
 module.exports = config;

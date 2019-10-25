@@ -37,12 +37,12 @@ function openPushStream(wsClient) {
 }
 
 const initCongnitiveService = function (wsClient) {
-    wsClient.on("startGoogleCloudStream", function (data) {
+    wsClient.on("startMicrosoftCognitiveService", function (data) {
         calledTimes = 0;
         const pushStream = openPushStream(wsClient);
         const speechProcessor = speech(settings, pushStream, wsClient);
 
-        wsClient.on("endGoogleCloudStream", function (data) {
+        wsClient.on("endMicrosoftCognitiveService", function (data) {
             speechProcessor.closeRecognizer();
         });
     });

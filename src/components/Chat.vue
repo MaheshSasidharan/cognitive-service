@@ -1,59 +1,131 @@
 <template>
   <div class="card mt-3">
-      <div class="card-body">
-          <div class="card-title">
-              <h3>Chat Group</h3>
-              <hr>
-          </div>
-          <div class="card-body">
-              <div class="messages" v-for="(msg, index) in messages" :key="index">
-                  <p><span class="font-weight-bold">{{ msg.user }}: </span>{{ msg.message }}</p>
-              </div>
-          </div>
+    <div class="card-footer">
+      <form @submit.prevent="sendMessage">
+        <div class="wrapper">
+          <button
+            id="startRecButton"
+            type="button"
+            :disabled="startButtonDisabled"
+            @click="startRecording()"
+          >Start</button>
+          <button
+            id="stopRecButton"
+            type="button"
+            :disabled="endButtonDisabled"
+            @click="stopRecording()"
+          >Stop recording</button>
+        </div>
+      </form>
+
+      <div class="messages" v-for="(msg, index) in messages" :key="index">
+        <p>
+          <span class="font-weight-bold" v-if="false">{{ msg }}:</span>
+          {{ msg }}
+        </p>
       </div>
-      <div class="card-footer">
-          <form @submit.prevent="sendMessage">
-              <div class="gorm-group">
-                  <label for="user">User:</label>
-                  <input type="text" v-model="user" class="form-control">
-              </div>
-              <div class="gorm-group pb-3">
-                  <label for="message">Message:</label>
-                  <input type="text" v-model="message" class="form-control">
-              </div>
-              <button type="submit" class="btn btn-success">Send</button>
-          </form>
-      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import io from 'socket.io-client';
+import io from "socket.io-client";
+import { downsampleBuffer, mediaConstraints, bufferSize } from "./common";
 export default {
-    data() {
-        return {
-            user: '',
-            message: '',
-            messages: [],
-            //socket : io('localhost:3000')
-        }
+  data() {
+    return {
+      user: "",
+      message: "",
+      messages: [],
+      AudioContext: null,
+      context: null,
+      processor: null,
+      input: null,
+      globalStream: null,
+      socket: io("localhost:3000"),
+      streamStreaming: false,
+      startButtonDisabled: false,
+      endButtonDisabled: true
+    };
+  },
+  methods: {
+    startRecording() {
+      this.startButtonDisabled = true;
+      this.endButtonDisabled = false;
+      this.initRecording();
     },
-    methods: {
-        sendMessage(e) {
-            // e.preventDefault();
-            
-            // this.socket.emit('SEND_MESSAGE', {
-            //     user: this.user,
-            //     message: this.message
-            // });
-            // this.message = ''
-        }
+    initRecording() {
+      this.socket.emit("startMicrosoftCognitiveService", "");
+      this.streamStreaming = true;
+      this.AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.context = new AudioContext({
+        // if Non-interactive, use 'playback' or 'balanced' // https://developer.mozilla.org/en-US/docs/Web/API/AudioContextLatencyCategory
+        latencyHint: "interactive"
+      });
+      this.processor = this.context.createScriptProcessor(bufferSize, 1, 1);
+      this.processor.connect(this.context.destination);
+      this.context.resume();
+
+      const handleSuccess = stream => {
+        this.globalStream = stream;
+        this.input = this.context.createMediaStreamSource(stream);
+        this.input.connect(this.processor);
+
+        this.processor.onaudioprocess = event => {
+          this.microphoneProcess(event);
+        };
+      };
+
+      navigator.mediaDevices.getUserMedia(mediaConstraints).then(handleSuccess);
     },
-    mounted() {
-        // this.socket.on('MESSAGE', (data) => {
-        //     this.messages = [...this.messages, data];
-        //     // you can also do this.messages.push(data)
-        // });
+    microphoneProcess(event) {
+      var left = event.inputBuffer.getChannelData(0);
+      var left16 = downsampleBuffer(left, 44100, 16000);
+      this.socket.emit("onSpeechReceving", left16);
+    },
+    stopRecording() {
+      this.startButtonDisabled = false;
+      this.endButtonDisabled = true;
+      this.streamStreaming = false;
+      this.socket.emit("endMicrosoftCognitiveService", "");
+
+      let track = this.globalStream.getTracks()[0];
+      track.stop();
+
+      this.input.disconnect(this.processor);
+      this.processor.disconnect(this.context.destination);
+      this.context.close().then(() => {
+        this.input = null;
+        this.processor = null;
+        this.context = null;
+        this.AudioContext = null;
+        this.startButtonDisabled = false;
+      });
     }
-}
+  },
+  mounted() {
+    this.socket.on("connect", data => {
+      this.socket.emit("join", "Server Connected to Client");
+    });
+
+    this.socket.on("messages", data => {
+      console.log("message", data);
+    });
+
+    this.socket.on("processedSpeech", data => {
+      this.messages = [...this.messages, data];
+    });
+
+    this.socket.on("endOfSpeechRecognition", data => {
+      console.log(data);
+      this.messages = [...this.messages, data.privJson];
+      this.stopRecording();
+    });
+  },
+  beforeDestroy() {
+    if (this.streamStreaming) {
+      this.socket.emit("endMicrosoftCognitiveService", "");
+    }
+  }
+};
 </script>
