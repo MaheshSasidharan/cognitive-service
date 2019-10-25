@@ -1,12 +1,35 @@
-const config = {
-    appPort: 3000,
-    subscriptionKey: "91add66ed08944f9869cb610d0335082", //"90d3e1606cf54d7782515aab7bc4635c";//"7dcb6e82ff7d4af2b6829932441af0d0"; //key 2bd95b8b437e24e02979e352b8345b110 
-    serviceRegion: "westus2",
-    speechRecognitionLanguage: "en-US"
+const { DotenvAzure } = require("dotenv-azure");
+
+const getConfigPromise = async () => {
+    const dotenvAzure = new DotenvAzure();
+    const { parsed } = await dotenvAzure.config();
+
+    const config = {
+        port: parsed.PORT || 3001,
+        subscriptionKey: parsed.SUBSCRIPTION_KEY || null,
+        serviceRegion: parsed.SERVICE_REGION || null,
+        speechRecognitionLanguage: parsed.SPEECH_RECOGNITION_LANGUAGE || null
+    };
+
+    return config;
 };
 
+module.exports = getConfigPromise;
+
+/*
+dotenz azure is only required if deploying on azure platform. You can also use dotazure, or none at all
+To get private config values, add a .env file with sample values (First two are required for dotenv-azure to work)
+AZURE_APP_CONFIG_URL="https://your-app-config.azconfig.io"
+AZURE_APP_CONFIG_CONNECTION_STRING="generated-app-config-conneciton-string"
+PORT=3000
+SUBSCRIPTION_KEY=91add66ed08944f9869cb610d0335082
+SERVICE_REGION=westus2
+SPEECH_RECOGNITION_LANGUAGE=en-US
+*/
+
+/*
+For LUIS use following:
 // luSubscriptionKey: "YourLanguageUnderstandingSubscriptionKey",
 // luServiceRegion: "YourLanguageUnderstandingServiceRegion",
-// luAppId: "YourLanguageUnderstandingAppId",
-
-module.exports = config;
+// luAppId: "YourLanguageUnderstandingAppId"
+*/

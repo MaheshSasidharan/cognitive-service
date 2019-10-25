@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv-azure": "^1.0.0-beta.4",
     "express": "^4.17.1",
     "microsoft-cognitiveservices-speech-sdk": "^1.7.0",
     "socket.io": "^2.3.0",
