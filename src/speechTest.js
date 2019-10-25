@@ -68,7 +68,7 @@ function microphoneProcess(e) {
     var left = e.inputBuffer.getChannelData(0);
     // var left16 = convertFloat32ToInt16(left); // old 32 to 16 function
     var left16 = downsampleBuffer(left, 44100, 16000)
-    socket.emit('onBinaryData', left16);
+    socket.emit('onSpeechReceving', left16);
 }
 
 
@@ -84,6 +84,7 @@ endButton.disabled = true;
 
 var recordingStatus = document.getElementById("recordingStatus");
 // recordingStatus.style.display = "none";
+let processedSpeechResponse = "";
 
 
 function startRecording() {
@@ -99,7 +100,7 @@ function stopRecording() {
     endButton.disabled = true;
     streamStreaming = false;
     socket.emit('endGoogleCloudStream', '');
-
+    processedSpeechResponse = "";
 
     let track = globalStream.getTracks()[0];
     track.stop();
@@ -138,9 +139,9 @@ socket.on('messages', function (data) {
     console.log("message", data);
 });
 
-
 socket.on('processedSpeech', function (data) {
-    recordingStatus.innerHTML = data;
+    data = JSON.stringify(data || {});
+    recordingStatus.innerHTML = `${processedSpeechResponse}\r\n${data}`;
 });
 
 

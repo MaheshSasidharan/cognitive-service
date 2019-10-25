@@ -2,13 +2,14 @@
 
 // pull in the required packages.
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
-const fs = require("fs");
+//const fs = require("fs");
 
-const settings = require("./settings");
+//const settings = require("./settings");
+const settings = require("../../config");
 const speech = require("./speech");
-const intent = require("./intent");
-const translate = require("./translation");
+//const translate = require("./translation");
 
+/*
 function openPushStream(filename) {
     // create the push stream we need for the speech sdk.
     const pushStream = sdk.AudioInputStream.createPushStream();
@@ -22,7 +23,34 @@ function openPushStream(filename) {
 
     return pushStream;
 }
+*/
+let calledTimes = 0;
+function openPushStream(wsClient) {
+    const pushStream = sdk.AudioInputStream.createPushStream();
+    wsClient.on("onSpeechReceving", function (arrayBuffer) {
+        console.log(++calledTimes)
+        if (!pushStream.privStream.isClosed) {
+            pushStream.write(arrayBuffer.slice());
+        }
+    });
+    return pushStream;
+}
 
+const initCongnitiveService = function (wsClient) {
+    wsClient.on("startGoogleCloudStream", function (data) {
+        calledTimes = 0;
+        const pushStream = openPushStream(wsClient);
+        const speechProcessor = speech(settings, pushStream, wsClient);
+
+        wsClient.on("endGoogleCloudStream", function (data) {
+            speechProcessor.closeRecognizer();
+        });
+    });
+}
+
+module.exports = initCongnitiveService;
+
+/*
 if (process.argv.length > 3) {
     settings.filename = process.argv[3];
 }
@@ -49,3 +77,4 @@ if (process.argv.length > 2) {
 else {
     console.log("usage: index.js [speech|intent|translate] {filename}");
 }
+*/

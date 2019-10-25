@@ -1,62 +1,50 @@
 const express = require("express");
 const app = express();
-
-const server = app.listen(3000, function () {
-  console.log('server running on port 3000');
+const config = require("./config");
+const server = app.listen(config.appPort, function () {
+  console.log(`server running on port ${config.appPort}`);
 });
 
+const io = require("socket.io")(server);
+//const sdk = require("microsoft-cognitiveservices-speech-sdk");
 
-const io = require('socket.io')(server);
+// let pushStream;
+// let recognizer; // Speech recognizer.
 
-/*
-io.on('connection', function(socket) {
-  console.log(socket.id)
-  socket.on('SEND_MESSAGE', function(data) {
-      io.emit('MESSAGE', data)
-  });
-});
-*/
+/*************** Web socket *****************/
 
+const cognitiveServices = require("./server/cognitive/cognitiveService");
 
-var sdk = require("microsoft-cognitiveservices-speech-sdk");
-var pushStream;
+io.on("connection", function (wsClient) {
+  console.log("Client Connected to server");
+  cognitiveServices(wsClient);
 
-var subscriptionKey = "91add66ed08944f9869cb610d0335082"; //"90d3e1606cf54d7782515aab7bc4635c";//"7dcb6e82ff7d4af2b6829932441af0d0"; //key 2bd95b8b437e24e02979e352b8345b110 
-var serviceRegion = "westus2";
-
-// create the speech recognizer.
-var recognizer;
-
-/********************************/
-
-io.on('connection', function (client) {
-  console.log('Client Connected to server');
-
-  client.on('join', function (data) {
+  wsClient.on("join", function (data) {
     console.log("join", data);
-    client.emit('messages', 'Socket Connected to Server');
+    wsClient.emit("messages", "Socket Connected to Server");
   });
 
-  client.on('messages', function (data) {
+  wsClient.on("messages", function (data) {
     console.log("messages", data);
-    client.emit('broad', data);
+    wsClient.emit("broad", data);
   });
 
-  client.on('startGoogleCloudStream', function (data) {
+  /*
+  client.on("startGoogleCloudStream", function (data) {
     console.log("startGoogleCloudStream", data);
 
     pushStream = sdk.AudioInputStream.createPushStream();
-    var audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
-    var speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-    speechConfig.speechRecognitionLanguage = "en-US";
-    
+    const audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
+    const speechConfig = sdk.SpeechConfig.fromSubscription(config.subscriptionKey, config.serviceRegion);
+    speechConfig.speechRecognitionLanguage = config.speechRecognitionLanguage;
+
     recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
     // start the recognizer and wait for a result.
     recognizer.recognizeOnceAsync(
       function (result) {
         console.log(result);
 
-        client.emit('processedSpeech', result.privText);
+        client.emit("processedSpeech", result.privText);
         recognizer.close();
         recognizer = undefined;
       },
@@ -68,14 +56,14 @@ io.on('connection', function (client) {
       });
   });
 
-  client.on('endGoogleCloudStream', function (data) {
+  client.on("endGoogleCloudStream", function (data) {
     console.log("endGoogleCloudStream", data);
     pushStream.close();
   });
 
-  client.on('onBinaryData', function (arrayBuffer) {
+  client.on("onBinaryData", function (arrayBuffer) {
     console.log("onBinaryData");
     pushStream.write(arrayBuffer.slice());
   });
-
+  */
 });
