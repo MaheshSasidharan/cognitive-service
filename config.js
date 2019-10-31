@@ -6,9 +6,12 @@ const getConfigPromise = async () => {
 
     const config = {
         port: parsed.PORT || 3001,
-        subscriptionKey: parsed.SUBSCRIPTION_KEY || null,
-        serviceRegion: parsed.SERVICE_REGION || null,
-        speechRecognitionLanguage: parsed.SPEECH_RECOGNITION_LANGUAGE || null
+        subscriptionKey: parsed.SUBSCRIPTION_KEY,
+        serviceRegion: parsed.SERVICE_REGION,
+        speechRecognitionLanguage: parsed.SPEECH_RECOGNITION_LANGUAGE,
+        luSubscriptionKey: parsed.LUIS_SUBSCRIPTION_KEY,
+        luServiceRegion: parsed.LUIS_SERVICE_REGION,
+        luAppId: parsed.LUIS_APP_ID
     };
 
     return config;
@@ -25,11 +28,7 @@ PORT=3000
 SUBSCRIPTION_KEY="dummy"
 SERVICE_REGION=westus2
 SPEECH_RECOGNITION_LANGUAGE=en-US
-*/
-
-/*
-For LUIS use following:
-// luSubscriptionKey: "YourLanguageUnderstandingSubscriptionKey",
-// luServiceRegion: "YourLanguageUnderstandingServiceRegion",
-// luAppId: "YourLanguageUnderstandingAppId"
+LUIS_SUBSCRIPTION_KEY="Key"
+LUIS_SERVICE_REGION="westus"
+LUIS_APP_ID="AppID"
 */

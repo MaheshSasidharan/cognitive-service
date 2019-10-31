@@ -1,7 +1,7 @@
 <template>
   <div class="card mt-3">
     <div class="card-footer">
-      <form @submit.prevent="sendMessage">
+      <form>
         <div class="wrapper">
           <button
             id="startRecButton"
@@ -15,14 +15,21 @@
             :disabled="endButtonDisabled"
             @click="stopRecording()"
           >Stop recording</button>
+          <button @click.prevent="clear()">Clear</button>
         </div>
       </form>
 
-      <div class="messages" v-for="(msg, index) in messages" :key="index">
-        <p>
-          <span class="font-weight-bold" v-if="false">{{ msg }}:</span>
-          {{ msg }}
-        </p>
+      <div class="splitInnerTwo">
+        <div class="messages">
+          <div v-for="(msg, index) in messages" :key="index">
+            <p>{{ msg }}</p>
+          </div>
+        </div>
+        <div class="messages">
+          <div v-for="(msg, index) in intentMessages" :key="index">
+            <p>{{ msg }}</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -37,6 +44,7 @@ export default {
       user: "",
       message: "",
       messages: [],
+      intentMessages: [],
       AudioContext: null,
       context: null,
       processor: null,
@@ -101,6 +109,10 @@ export default {
         this.AudioContext = null;
         this.startButtonDisabled = false;
       });
+    },
+    clear() {
+      this.messages = [];
+      this.intentMessages = [];
     }
   },
   mounted() {
@@ -121,6 +133,16 @@ export default {
       this.messages = [...this.messages, data.privJson];
       this.stopRecording();
     });
+
+    this.socket.on("processedIntent", data => {
+      this.intentMessages = [...this.intentMessages, data];
+    });
+
+    this.socket.on("endOfIntentRecognition", data => {
+      console.log(data);
+      this.intentMessages = [...this.intentMessages, data.privJson];
+      this.stopRecording();
+    });
   },
   beforeDestroy() {
     if (this.streamStreaming) {
@@ -129,3 +151,6 @@ export default {
   }
 };
 </script>
+<style>
+@import "./app.css";
+</style>
